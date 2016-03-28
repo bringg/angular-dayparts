@@ -3,7 +3,8 @@ angular.module('angular-dayparts', [])
     return {
         restrict: 'E',
         scope: {
-            options: '=?'
+            options: '=',
+            disabled: '='
         },
         templateUrl: 'template.html',
         controller: function($scope, $element, $attrs) {
@@ -11,7 +12,7 @@ angular.module('angular-dayparts', [])
             $scope.options = $scope.options || {};
             $scope.options.reset = ($scope.options.reset === undefined) ? true : $scope.options.reset;
 
-            $scope.days = [{name: 'monday', position: 1}, {name: 'tuesday', position: 2}, {name: 'wednesday', position: 3}, {name: 'thursday', position: 4}, {name: 'friday', position: 5}, {name: 'saturday', position: 6}, {name: 'sunday', position: 7}];
+            $scope.days = [{name: 'sunday', position: 1}, {name: 'monday', position: 2}, {name: 'tuesday', position: 3}, {name: 'wednesday', position: 4}, {name: 'thursday', position: 5}, {name: 'friday', position: 6}, {name: 'saturday', position: 7}];
             $scope.hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 
             var klass = 'selected';
@@ -26,6 +27,13 @@ angular.module('angular-dayparts', [])
                     repopulate($scope.options.selected);
                 }, 100);
             }
+
+            $scope.$watch('options', function(newValue, oldValue){
+                if(newValue === oldValue){
+                    return;
+                }
+                repopulate($scope.options.selected);
+            }, true);
 
 
             /**
@@ -74,6 +82,9 @@ angular.module('angular-dayparts', [])
              * @param {jQuery DOM element}
              */
             function mouseDown(el) {
+                if($scope.disabled){
+                    return;
+                }
                 isDragging = true;
                 setStartCell(el);
                 setEndCell(el);
@@ -157,7 +168,7 @@ angular.module('angular-dayparts', [])
             function getCoords(cell) {
                 var row = cell.parents('row');
                 return {
-                    column: cell[0].cellIndex, 
+                    column: cell[0].cellIndex,
                     row: cell.parent()[0].rowIndex
                 };
             }
@@ -171,6 +182,8 @@ angular.module('angular-dayparts', [])
                 $element.find('td').each(function(i, el){
                     if (_.contains(selected, $(el).data('time'))) {
                         $(el).addClass(klass);
+                    }else{
+                        $(el).removeClass(klass);
                     }
                 });
             }
@@ -182,7 +195,7 @@ angular.module('angular-dayparts', [])
              */
             $scope.selectDay = function(day) {
                 var numSelectedHours = selected.filter(function(item){
-                    return item.split('-')[0] === day.name; 
+                    return item.split('-')[0] === day.name;
                 }).length;
 
                 $element.find('table tr:eq(' + day.position + ') td:not(:last-child)').each(function(i, el) {
@@ -282,7 +295,7 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('template.html',
-    '<div class="dayparts">\n' +
+    '<div class="dayparts {{disabled}}">\n' +
     '\n' +
     '    <table border="0" cellspacing="0" cellpadding="0">\n' +
     '        <tr>\n' +
@@ -294,8 +307,8 @@ module.run(['$templateCache', function($templateCache) {
     '        </tr>\n' +
     '        <tr ng-repeat="day in days">\n' +
     '            <th>\n' +
-    '                <a ng-if="!options.disableRowSelection" ng-click="selectDay(day)">{{day.name}}</a>\n' +
-    '                <span ng-if="options.disableRowSelection">{{day.name}}</span>\n' +
+    '                <a ng-if="!options.disableRowSelection" ng-click="selectDay(day)" style="text-transform:capitalize;">{{day.name}}</a>\n' +
+    '                <span ng-if="options.disableRowSelection" style="text-transform:capitalize;">{{day.name}}</span>\n' +
     '            </th>\n' +
     '            <td ng-repeat="hour in hours" data-time="{{day.name}}-{{hour}}"></td>\n' +
     '        </tr>\n' +

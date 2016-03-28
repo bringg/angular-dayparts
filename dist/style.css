@@ -59,3 +59,7 @@
 .dayparts a:hover {
     color: #333333;
 }
+
+.dayparts.true{
+  opacity: 0.5;
+}
